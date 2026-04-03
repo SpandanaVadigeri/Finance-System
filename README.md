@@ -1,62 +1,107 @@
-## Finance Data Processing & Access Control Backend
-This project is a backend system for a Finance Dashboard Application. It is designed to manage financial records, user roles, and provide summary analytics through well-structured APIs.
+# Finance Data Processing and Access Control Backend
 
-The system demonstrates backend development concepts such as:
-- REST API design
-- Data modeling
-- Role-based access control
-- Business logic implementation
-- Validation and error handling
+## Overview
 
-# Tech Stack
-- Language: Java
-- Framework: Spring Boot
-- Database: MySQL
-- ORM: Spring Data JPA (Hibernate)
-- Build Tool: Maven
-- Optional Enhancements: Spring Security, JWT
-- Testing: Postman API 
+This project is a backend system for managing financial records with role-based access control. It supports user management, financial transactions, and dashboard analytics.
 
-# Features
-User & Role Management
-- Create and manage users
-- Assign roles (ADMIN, ANALYST, VIEWER)
-- Activate / deactivate users
-- Role-based access restrictions
+The system is designed with clean architecture, proper data modeling, and separation of concerns.
 
-Financial Records Management
-- Create financial records (income / expense)
-- View all records
-- Update existing records
-- Delete records
-- Filter records by:
+---
 
-        - Type (income/expense)
-        - Category
-        - Date range
+## Architecture
 
-Dashboard Summary APIs
-- Total income
-- Total expenses
-- Net balance
-- Category-wise totals
-- Recent activity
-- Monthly/weekly trends
+Controller → Service → Repository → Database
+DTOs are used between Controller and Service layers.
 
-Access Control:
+---
 
-Role-based permissions enforced at backend level:
+## Core Features
 
-Role	          Permissions
+### 1. User and Role Management
 
-VIEWER	   -     Read-only access
+* Create users
+* Assign roles (VIEWER, ANALYST, ADMIN)
+* Role-based access control implemented in service layer
 
-ANALYST	   -     View records + analytics
+### 2. Financial Records Management
 
-ADMIN	   -     Full access (CRUD + user management)
+* Create financial records
+* View all records
+* Each record contains:
 
-Validation & Error Handling
-- Input validation using annotations
-- Proper HTTP status codes
-- Global exception handling
-- Protection against invalid operations
+  * amount
+  * type (INCOME / EXPENSE)
+  * category
+  * date
+
+### 3. Dashboard APIs
+
+* Total income
+* Total expenses
+* Net balance
+* Category-wise totals
+
+### 4. Access Control
+
+* ADMIN → can create records
+* VIEWER → read-only access
+* ANALYST → read + analytics
+
+---
+
+##  API Endpoints
+
+### User APIs
+
+* POST /users
+* GET /users/{id}
+
+### Financial Record APIs
+
+* POST /records
+* GET /records
+
+### Dashboard APIs
+
+* GET /dashboard/summary
+* GET /dashboard/category
+
+---
+
+##  Database Design
+
+### User
+
+* id, name, email, password, role_id, status
+
+### Role
+
+* id, name
+
+### FinancialRecord
+
+* id, user_id, amount, type, category, record_date
+
+---
+
+##  Technologies Used
+
+* Java
+* Spring Boot
+* Spring Data JPA
+* REST APIs
+
+---
+
+## Design Decisions
+
+* Role is implemented as a separate entity for scalability
+* DTOs are used to separate API layer from database layer
+* Dashboard data is computed dynamically instead of being stored
+* Minimal and clean design to ensure maintainability
+
+---
+
+## Conclusion
+
+This system demonstrates backend design principles including data modeling, API structuring, role-based access control, and data processing logic.
