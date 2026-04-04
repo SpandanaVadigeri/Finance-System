@@ -15,7 +15,7 @@ public class UserController {
 
     // Create new user
     // POST /users
-    @PostMapping("/add")
+    @PostMapping
     public UserResponseDTO createUser(@RequestBody UserRequestDTO requestDTO) {
 
         // Controller simply forwards request to service layer
