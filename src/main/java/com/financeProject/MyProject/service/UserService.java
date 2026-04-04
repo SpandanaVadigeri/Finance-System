@@ -7,6 +7,7 @@ import com.financeProject.MyProject.model.User;
 import com.financeProject.MyProject.repository.RoleRepository;
 import com.financeProject.MyProject.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -20,6 +21,8 @@ public class UserService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     // CREATE USER
     // Called from: POST /users
     public UserResponseDTO createUser(UserRequestDTO dto) {
@@ -38,7 +41,7 @@ public class UserService {
         User user = new User();
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword()); // (later can hash)
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));// (later can hash)
         user.setRole(role);
         user.setStatus("ACTIVE");
 
