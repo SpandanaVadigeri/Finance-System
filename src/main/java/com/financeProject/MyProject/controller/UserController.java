@@ -30,4 +30,13 @@ public class UserController {
         return userService.getUser(id);
     }
 
+    //here we send status, and that'll be assigned
+    @PutMapping("/{id}/status")
+    public UserResponseDTO updateStatus(@PathVariable Long id,
+                                        @RequestParam String status) {
+
+        return userService.updateStatus(id, status);
+    }
+
+
 }

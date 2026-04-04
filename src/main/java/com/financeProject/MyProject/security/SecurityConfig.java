@@ -17,16 +17,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.csrf(csrf -> csrf.disable())
+        http
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/users").permitAll()
+
+                        // 🔓 Public APIs
+                        .requestMatchers("/auth/**").permitAll()
+
+                        // 🔐 User APIs require authentication
+                        .requestMatchers("/users/**").authenticated()
+
+                        // 🔐 Everything else secured
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
