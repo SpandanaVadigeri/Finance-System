@@ -62,39 +62,17 @@ public class UserService {
         return convertToDTO(user);
     }
 
-//    // UPDATE USER ROLE
-//    // Called from: PUT /users/{id}/role
-//    public UserResponseDTO updateUserRole(Long userId, String roleName) {
-//
-//        // Fetch user
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//        // Fetch role
-//        Role role = roleRepository.findByName(roleName)
-//                .orElseThrow(() -> new RuntimeException("Role not found"));
-//
-//        // Update role
-//        user.setRole(role);
-//
-//        // Save updated user
-//        User updatedUser = userRepository.save(user);
-//
-//        return convertToDTO(updatedUser);
-//    }
-//
-//    // (OPTIONAL BUT GOOD) ACTIVATE / DEACTIVATE USER
-//    public UserResponseDTO updateUserStatus(Long userId, String status) {
-//
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//        user.setStatus(status); // ACTIVE / INACTIVE
-//
-//        User updated = userRepository.save(user);
-//
-//        return convertToDTO(updated);
-//    }
+    public UserResponseDTO updateStatus(Long userId, String status) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setStatus(status);
+
+        User updated = userRepository.save(user);
+
+        return convertToDTO(updated);
+    }
 
     // HELPER METHOD: ENTITY → DTO
     // Centralized mapping (clean design)
