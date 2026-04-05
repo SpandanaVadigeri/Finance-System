@@ -63,6 +63,10 @@ public class FinancialRecordService {
 
         List<FinancialRecord> records;
 
+        System.out.println("EMAIL: " + email);
+        System.out.println("ROLE: " + role);
+        System.out.println("USER ID: " + user.getId());
+
         if (role.equals("VIEWER")) {
             // Only own records
             records = recordRepository.findByUserId(user.getId());

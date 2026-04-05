@@ -53,6 +53,15 @@ public class FinancialRecordController {
         return "All records deleted";
     }
 
+    // GET /records → normal role-based fetch
+    @GetMapping("/all")
+    public List<FinancialRecordResponseDTO> getAllRecords(Principal principal) {
+
+        String email = principal.getName();
+
+        return recordService.getRecords(email);
+    }
+
     // DELETE /records/{id}
     @DeleteMapping("/{id}")
     public String deleteRecordById(@PathVariable Long id,
@@ -65,19 +74,18 @@ public class FinancialRecordController {
         return "Record deleted";
     }
 
-    @GetMapping
+    @GetMapping("/filter")
     public List<FinancialRecordResponseDTO> getFilteredRecords(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            java.security.Principal principal) {
+            Principal principal) {
 
         String email = principal.getName();
 
         return recordService.getFilteredRecords(email, type, category, startDate, endDate);
     }
-
     @GetMapping("/user/{userId}")
     public List<FinancialRecordResponseDTO> getRecordsByUserId(
             @PathVariable Long userId,
