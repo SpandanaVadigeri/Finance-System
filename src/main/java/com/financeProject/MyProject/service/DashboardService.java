@@ -15,6 +15,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/*
+  Service layer for dashboard and analytics operations.
+
+  Purpose:
+  - Provides aggregated financial data for dashboard visualization
+  - Implements role-based data filtering for VIEWER, ANALYST, and ADMIN roles
+  - Handles summary calculations, category breakdowns, trends, and recent activity
+
+  Role-Based Access Summary:
+  - VIEWER: Only sees their own aggregated data and transactions
+  - ANALYST: Sees all users' data (read-only) for company-wide analysis
+  - ADMIN: Same as ANALYST with additional write capabilities (handled elsewhere)
+
+  Key Features:
+  - Personal dashboard summaries for individual users
+  - Company-wide analytics for management and analysis
+  - Category-wise spending and income breakdowns
+  - Monthly trend analysis for financial patterns
+  - Recent activity feed for quick insights
+
+ */
+
 @Service
 public class DashboardService {
 
@@ -24,7 +46,23 @@ public class DashboardService {
     @Autowired
     private UserRepository userRepository;
 
-    // GET SUMMARY (Viewer + Analyst + Admin allowed)
+
+    /*
+      Retrieves financial summary for all users combined.
+
+      This method calculates total income, total expense, and net balance
+      across ALL financial records in the system without any user filtering.
+
+      Access: All authenticated users (VIEWER, ANALYST, ADMIN) can access
+
+      Calculation Process:
+      - Fetches all records from database
+      - Iterates through each record to sum INCOME amounts
+      - Iterates through each record to sum EXPENSE amounts
+      - Calculates net balance as income minus expense
+
+      @return DashboardSummaryDTO containing totalIncome, totalExpense, and netBalance
+     */
     public DashboardSummaryDTO getSummary() {
 
         List<FinancialRecord> records = recordRepository.findAll();
@@ -51,8 +89,24 @@ public class DashboardService {
         return dto;
     }
 
+    /*
+      Retrieves category-wise breakdown of all financial records.
 
-    // CATEGORY-WISE TOTALS
+      This method groups all transactions by category and calculates
+      the total amount spent or earned in each category.
+
+      Access: All authenticated users (VIEWER, ANALYST, ADMIN)
+
+      Processing Logic:
+      - Fetches all records from database
+      - Uses HashMap to aggregate amounts by category
+      - Handles null categories by defaulting to "OTHER"
+      - Converts map entries to CategorySummaryDTO list
+
+      @return List of CategorySummaryDTO with category names and total amounts
+     */
+
+
     public List<CategorySummaryDTO> getCategorySummary() {
 
         List<FinancialRecord> records = recordRepository.findAll();
@@ -91,6 +145,19 @@ public class DashboardService {
         return result;
     }
 
+    /*
+      Retrieves role-appropriate dashboard data for the authenticated user.
+
+      This method provides different data based on user role:
+      - VIEWER: Returns their own personal summary
+      - ANALYST/ADMIN: Returns summaries for all VIEWER users in the system
+
+      Access: All authenticated users
+
+      @param email - Email of the authenticated user
+      @return Object containing either personal summary or list of all viewers' summaries
+      @throws RuntimeException if user not found in database
+     */
     public Object getDashboard(String email) {
 
         User user = userRepository.findByEmail(email)
@@ -129,6 +196,19 @@ public class DashboardService {
         return result;
     }
 
+    /*
+      Retrieves company-wide financial summary for ANALYST and ADMIN roles.
+
+      This method returns aggregated financial data across all users.
+      VIEWER role is explicitly denied access to this endpoint.
+
+      Access: ANALYST and ADMIN only
+
+      @param email Email of the authenticated user
+      @return Map containing totalIncome, totalExpense, and netBalance for entire company
+      @throws RuntimeException if user is VIEWER or user not found
+     */
+
     public Object getCompanySummary(String email) {
 
         User user = userRepository.findByEmail(email)
@@ -147,6 +227,16 @@ public class DashboardService {
 
         return calculateSummary(allRecords);
     }
+
+    /*
+      Helper method to calculate summary from a list of financial records.
+
+      This internal method performs the core calculation logic used by
+      multiple dashboard methods to avoid code duplication.
+
+      @param records -  List of FinancialRecord objects to analyze
+      @return Map containing totalIncome, totalExpense, and netBalance keys
+     */
 
     private Map<String, Double> calculateSummary(List<FinancialRecord> records) {
 
@@ -167,6 +257,20 @@ public class DashboardService {
                 "netBalance", income - expense
         );
     }
+
+    /*
+      Retrieves monthly financial trends for analysis.
+
+      This method groups transactions by month and calculates total amounts
+      to identify spending and income patterns over time.
+
+      Access:
+      - VIEWER: Returns their own monthly trends
+      - ANALYST/ADMIN: Returns company-wide monthly trends
+
+      @param email - Email of the authenticated user
+      @return Map with month names as keys and total amounts as values
+     */
 
     public Object getTrends(String email) {
 
@@ -195,6 +299,20 @@ public class DashboardService {
         return trends;
     }
 
+    /*
+      Retrieves detailed category-wise financial analysis.
+
+      This method provides comprehensive breakdown of transactions by category
+      to help identify major spending areas and income sources.
+
+      Access:
+      - VIEWER: Returns their own category analysis
+      - ANALYST/ADMIN: Returns company-wide category analysis
+
+      @param email - Email of the authenticated user
+      @return Map with category names as keys and total amounts as values
+     */
+
     public Object getCategoryAnalysis(String email) {
 
         User user = userRepository.findByEmail(email).orElseThrow();
@@ -221,6 +339,26 @@ public class DashboardService {
         return categoryMap;
     }
 
+    /*
+      Retrieves most recent transactions for activity feed.
+
+      This method returns the latest 5 transactions sorted by date
+      to provide a quick view of recent financial activity.
+
+      Access:
+      - VIEWER: Returns their own recent transactions
+      - ANALYST/ADMIN: Returns all users' recent transactions
+
+      Processing Steps:
+      - Fetches appropriate records based on user role
+      - Sorts records by date in descending order (newest first)
+      - Limits results to top 5 transactions
+      - Converts each record to response DTO
+
+      @param email Email of the authenticated user
+      @return List of FinancialRecordResponseDTO for the 5 most recent transactions
+     */
+
     public Object getRecentActivity(String email) {
 
         User user = userRepository.findByEmail(email).orElseThrow();
@@ -245,6 +383,15 @@ public class DashboardService {
                 .toList();
     }
 
+    /*
+      Helper method to convert FinancialRecord entity to Response DTO.
+
+      This internal method ensures consistent data transformation
+      and excludes sensitive or unnecessary fields.
+
+      @param record FinancialRecord entity to convert
+      @return FinancialRecordResponseDTO with selected fields
+     */
     private FinancialRecordResponseDTO convertToDTO(FinancialRecord record) {
 
         FinancialRecordResponseDTO dto = new FinancialRecordResponseDTO();

@@ -1,107 +1,141 @@
-# Finance Data Processing and Access Control Backend
+#  Finance Management System - Role Based Financial Platform
 
-## Overview
+[![Java](https://img.shields.io/badge/Java-17-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![JWT](https://img.shields.io/badge/JWT-Security-orange.svg)](https://jwt.io/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
 
-This project is a backend system for managing financial records with role-based access control. It supports user management, financial transactions, and dashboard analytics.
 
-The system is designed with clean architecture, proper data modeling, and separation of concerns.
+##  Project Overview
 
----
+A comprehensive **Role-Based Financial Management System** that enables organizations to track income, expenses, and generate financial insights with granular access control. The system implements three distinct user roles with carefully defined permissions, JWT-based authentication, and real-time dashboard analytics.
 
-## Architecture
+###  Key Features
 
-Controller → Service → Repository → Database
-DTOs are used between Controller and Service layers.
-
----
-
-## Core Features
-
-### 1. User and Role Management
-
-* Create users
-* Assign roles (VIEWER, ANALYST, ADMIN)
-* Role-based access control implemented in service layer
-
-### 2. Financial Records Management
-
-* Create financial records
-* View all records
-* Each record contains:
-
-  * amount
-  * type (INCOME / EXPENSE)
-  * category
-  * date
-
-### 3. Dashboard APIs
-
-* Total income
-* Total expenses
-* Net balance
-* Category-wise totals
-
-### 4. Access Control
-
-* ADMIN → can create records
-* VIEWER → read-only access
-* ANALYST → read + analytics
+| Feature | Description |
+|---------|-------------|
+|  **JWT Authentication** | Secure token-based authentication with refresh token support |
+|  **Role Management** | Three-tier role system: VIEWER, ANALYST, ADMIN |
+|  **Transaction Management** | Complete CRUD operations for income/expense tracking |
+|  **Dashboard Analytics** | Real-time summaries, trends, and category breakdowns |
+|  **Soft Delete** | Data recovery capable deletion mechanism |
+|  **Pagination & Filtering** | Efficient data retrieval for large datasets |
+|  **Token Blacklisting** | Secure logout with immediate token invalidation |
 
 ---
 
-##  API Endpoints
+##  Role-Based Access Control
 
-### User APIs
+### Role Capabilities Matrix
 
-* POST /users
-* GET /users/{id}
+| Operation |  VIEWER |  ANALYST |  ADMIN |
+|-----------|-----------|------------|----------|
+| **View own transactions** | ✅ | ✅ | ✅ |
+| **View all transactions** | ❌ | ✅ | ✅ |
+| **View own dashboard** | ✅ | ✅ | ✅ |
+| **View company dashboard** | ❌ | ✅ | ✅ |
+| **Create transactions** | ❌ | ❌ | ✅ |
+| **Update transactions** | ❌ | ❌ | ✅ |
+| **Delete transactions** | ❌ | ❌ | ✅ |
+| **View user list** | ❌ | ❌ | ✅ |
+| **Create users** | ❌ | ❌ | ✅ |
+| **Update user roles** | ❌ | ❌ | ✅ |
+| **Activate/Deactivate users** | ❌ | ❌ | ✅ |
 
-### Financial Record APIs
 
-* POST /records
-* GET /records
+##  Technology Stack
 
-### Dashboard APIs
-
-* GET /dashboard/summary
-* GET /dashboard/category
-
----
-
-##  Database Design
-
-### User
-
-* id, name, email, password, role_id, status
-
-### Role
-
-* id, name
-
-### FinancialRecord
-
-* id, user_id, amount, type, category, record_date
+| Category | Technology | Version |
+|----------|------------|---------|
+| **Framework** | Spring Boot | 3.x |
+| **Security** | Spring Security + JWT | 0.11.5 |
+| **Database** | MySQL / H2 | 8.0 / latest |
+| **ORM** | Spring Data JPA (Hibernate) | - |
+| **Build Tool** | Maven | 3.8+ |
+| **Java** | OpenJDK | 17 |
+| **Documentation** | Swagger/OpenAPI  | 2.0+ |
 
 ---
 
-##  Technologies Used
+## Installation and Setup
 
-* Java
-* Spring Boot
-* Spring Data JPA
-* REST APIs
+### Prerequisites
 
----
+```bash
+✓ Java 17 or higher
+✓ Maven 3.8+
+✓ MySQL 8.0 (or use H2 for testing)
+✓ Git
 
-## Design Decisions
+```
 
-* Role is implemented as a separate entity for scalability
-* DTOs are used to separate API layer from database layer
-* Dashboard data is computed dynamically instead of being stored
-* Minimal and clean design to ensure maintainability
+### Step-by-Step Setup
+## 1. Clone Repository
+   - git clone https://github.com/yourusername/finance-project.git
+   - cd finance-project
+## 2. Configure Database
 
----
+   Create MySQL database:
+   CREATE DATABASE finance_db;
+   CREATE USER 'finance_user'@'localhost' IDENTIFIED BY 'your_password';
+   GRANT ALL PRIVILEGES ON finance_db.* TO 'finance_user'@'localhost';
+   FLUSH PRIVILEGES;
 
-## Conclusion
 
-This system demonstrates backend design principles including data modeling, API structuring, role-based access control, and data processing logic.
+## 3. Configure application.properties
+
+ src/main/resources/application.properties
+
+## src/main/resources/application.properties
+
+### Database Configuration
+spring.datasource.url=jdbc:mysql://localhost:3306/finance_db
+spring.datasource.username=finance_user
+spring.datasource.password=your_password
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+### JPA Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.properties.hibernate.format_sql=true
+
+### JWT Configuration (Change in production!)
+jwt.secret=your-256-bit-secret-key-for-jwt-signing
+jwt.expiration=3600000
+
+### Logging
+logging.level.com.financeProject=DEBUG
+logging.level.org.springframework.security=DEBUG
+## 4. Initialize Database with Roles
+Run this SQL script to create initial roles:
+
+sql
+INSERT INTO roles (name) VALUES ('VIEWER');
+
+INSERT INTO roles (name) VALUES ('ANALYST');
+
+INSERT INTO roles (name) VALUES ('ADMIN');
+## 5. Build and Run
+
+### Build the project
+mvn clean install
+
+### Run the application
+mvn spring-boot:run
+
+### Or run the JAR
+java -jar target/MyProject-0.0.1-SNAPSHOT.jar
+
+
+## Personal details
+ 
+ Author: 
+Spandana V
+
+Email: spandanavadigeri@gmail.com
+
+LinkedIn: linkedin.com/in/yourprofile
+
+GitHub: github.com/yourusername
+

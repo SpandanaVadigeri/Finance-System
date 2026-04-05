@@ -8,6 +8,50 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+/*
+  Core security configuration class for the application.
+
+  Purpose:
+  - Defines security rules and access control for all HTTP endpoints
+  - Configures authentication and authorization mechanisms
+  - Integrates JWT filter into Spring Security filter chain
+
+  Security Configuration Details:
+  - CSRF protection is disabled because JWT tokens are stateless
+  - Session management is stateless (no server-side session storage)
+  - JWT filter is added before UsernamePasswordAuthenticationFilter
+  - AuthenticationManager is exposed for login endpoint usage
+
+  Public Endpoints (No Authentication Required):
+  - /auth/** : Login, logout, and authentication endpoints
+  - /swagger-ui/** : Swagger UI documentation interface
+  - /swagger-ui.html : Swagger UI main page
+  - /v3/api-docs/** : OpenAPI documentation endpoints
+
+  Role-Based Access Rules:
+  - /admin/** : Restricted to users with ADMIN authority only
+  - /users/** : Requires authentication (any logged-in user)
+  - All other endpoints : Require authentication
+
+  Filter Chain Order:
+  - JwtFilter executes first to validate JWT token
+  - UsernamePasswordAuthenticationFilter executes after JWT filter
+  - Request proceeds to controller if authentication passes
+
+  AuthenticationManager Bean:
+  - Exposed as Spring bean for dependency injection
+  - Used by AuthController during login process
+  - Integrates with CustomUserDetailsService and PasswordEncoder
+  - Obtained from AuthenticationConfiguration
+
+  Security Flow:
+  - Request arrives → JwtFilter validates token → Sets authentication context
+  - Request reaches SecurityConfig → Role/URL matching occurs
+  - Access granted or denied based on authentication and authorities
+  - 401 Unauthorized if no authentication present
+  - 403 Forbidden if authenticated but insufficient privileges
+ */
 @Configuration
 public class SecurityConfig {
 

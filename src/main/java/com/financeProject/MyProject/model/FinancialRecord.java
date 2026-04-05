@@ -8,6 +8,48 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/*
+  Entity representing a financial transaction record in the system.
+
+  This entity maps to the "financial_records" table and stores all financial
+  transactions including income and expenses for each user in the system.
+
+  Core Features:
+  - Supports both INCOME and EXPENSE transaction types
+  - Implements soft delete mechanism for data recovery
+  - Maintains audit timestamps for tracking
+  - Links to User entity for ownership management
+
+  Role-Based Access Control Integration:
+  Financial records are accessed based on user roles:
+    • VIEWER  → Can only access records where user_id = their ID
+    • ANALYST → Can access ALL records (read-only)
+    • ADMIN   → Can access ALL records with full CRUD operations
+
+  Transaction Types:
+  - INCOME:  Money received (salary, freelance, gifts, refunds)
+  - EXPENSE: Money spent (rent, groceries, utilities, entertainment)
+
+   Soft Delete Strategy:
+  - deleted = false → Record is active and visible in queries
+  - deleted = true  → Record is hidden from normal queries
+  - Benefits: Data recovery, audit trails, historical reporting
+
+  Audit Fields:
+  - createdAt: Automatically set when record is first persisted
+  - recordDate: Business date of the transaction (can be different from createdAt)
+
+  Database Constraints:
+  - user_id: Foreign key to users table (NOT NULL)
+  - amount: Must be positive (enforced at application level)
+  - type: Only 'INCOME' or 'EXPENSE' allowed
+  - recordDate: Defaults to current date if not provided
+
+  @see User
+  @see FinancialRecordService
+  @see FinancialRecordController
+ */
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
