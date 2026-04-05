@@ -5,6 +5,8 @@ import com.financeProject.MyProject.dto.DashboardSummaryDTO;
 import com.financeProject.MyProject.service.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -33,4 +35,38 @@ public class DashboardController {
         // Calls service layer to compute category-wise totals
         return dashboardService.getCategorySummary();
     }
+
+    @GetMapping
+    public Object getDashboard(java.security.Principal principal) {
+
+        String email = principal.getName();
+
+        return dashboardService.getDashboard(email);
+    }
+
+    @GetMapping("/company-summary")
+    public Object getCompanySummary(java.security.Principal principal) {
+
+        String email = principal.getName();
+
+        return dashboardService.getCompanySummary(email);
+    }
+
+    @GetMapping("/trends")
+    public Object getTrends(Principal principal) {
+        return dashboardService.getTrends(principal.getName());
+    }
+
+    @GetMapping("/category-analysis")
+    public Object getCategoryAnalysis(Principal principal) {
+        return dashboardService.getCategoryAnalysis(principal.getName());
+    }
+
+    @GetMapping("/recent-activity")
+    public Object getRecentActivity(Principal principal) {
+        return dashboardService.getRecentActivity(principal.getName());
+    }
+
+
+
 }

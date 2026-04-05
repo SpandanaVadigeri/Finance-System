@@ -1,7 +1,7 @@
 package com.financeProject.MyProject.security;
 
 import com.financeProject.MyProject.repository.UserRepository;
-import com.financeProject.MyProject.model.User; // ✅ IMPORTANT
+import com.financeProject.MyProject.model.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;

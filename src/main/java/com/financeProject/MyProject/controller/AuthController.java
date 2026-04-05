@@ -2,6 +2,8 @@ package com.financeProject.MyProject.controller;
     import com.financeProject.MyProject.dto.AuthRequestDTO;
     import com.financeProject.MyProject.dto.AuthResponseDTO;
     import com.financeProject.MyProject.security.JwtUtil;
+    import com.financeProject.MyProject.service.AuthService;
+    import jakarta.servlet.http.HttpServletRequest;
     import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,7 +19,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
         @Autowired
         private JwtUtil jwtUtil;
 
-        // 🔹 LOGIN API
+        @Autowired
+        private AuthService authService;
+
+        // LOGIN API
         // POST /auth/login
         @PostMapping("/login")
         public AuthResponseDTO login(@RequestBody AuthRequestDTO request) {
@@ -35,6 +40,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
             // Step 3: Return token
             return new AuthResponseDTO(token);
+        }
+
+        @PostMapping("/logout")
+        public String logout(HttpServletRequest request) {
+
+            String authHeader = request.getHeader("Authorization");
+
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+
+                String token = authHeader.substring(7);
+
+                authService.logout(token);
+
+                return "Logged out successfully";
+            }
+
+            return "No token provided";
         }
     }
 

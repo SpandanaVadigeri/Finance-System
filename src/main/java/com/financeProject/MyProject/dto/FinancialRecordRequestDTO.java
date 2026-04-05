@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,5 +16,5 @@ public class FinancialRecordRequestDTO {
     private String type;          // INCOME / EXPENSE
     private String category;      // e.g., Food, Rent
     private String notes;         // Optional
-    private String recordDate;    // Format: YYYY-MM-DD
+    private LocalDate recordDate;    // Format: YYYY-MM-DD
 }

@@ -23,45 +23,195 @@ public class FinancialRecordService {
     private UserRepository userRepository;
 
     //  CREATE RECORD (Only ADMIN allowed)
-    public FinancialRecordResponseDTO createRecord(Long userId,
-                                                   FinancialRecordRequestDTO dto,
-                                                   String roleName) {
+    public FinancialRecordResponseDTO createRecord(String adminEmail,
+                                                   Long targetUserId,
+                                                   FinancialRecordRequestDTO dto) {
 
-        // Access control
-        if (!roleName.equals("ADMIN")) {
-            throw new RuntimeException("Access Denied: Only ADMIN can create records");
-        }
-
-        // Fetch user
-        User user = userRepository.findById(userId)
+        //  who is making request
+        User admin = userRepository.findByEmail(adminEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Convert DTO → Entity
+        // only ADMIN allowed
+        if (!admin.getRole().getName().equals("ADMIN")) {
+            throw new RuntimeException("Only ADMIN can create records");
+        }
+
+        // target user
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new RuntimeException("Target user not found"));
+
         FinancialRecord record = new FinancialRecord();
-        record.setUser(user);
+
+        record.setUser(targetUser);
         record.setAmount(dto.getAmount());
         record.setType(dto.getType());
         record.setCategory(dto.getCategory());
+        record.setRecordDate(dto.getRecordDate());
         record.setNotes(dto.getNotes());
 
-        // Convert String → LocalDate
-        record.setRecordDate(LocalDate.parse(dto.getRecordDate()));
-
-        // Save to DB
-        FinancialRecord saved = recordRepository.save(record);
-
-        // Convert Entity → Response DTO
-        return convertToDTO(saved);
+        return convertToDTO(recordRepository.save(record));
     }
 
-    //  GET ALL RECORDS (All roles allowed)
-    public List<FinancialRecordResponseDTO> getAllRecords() {
 
-        return recordRepository.findAll()
-                .stream()
-                .map(this::convertToDTO) // Convert each entity to DTO
-                .collect(Collectors.toList());
+
+    public List<FinancialRecordResponseDTO> getRecords(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String role = user.getRole().getName();
+
+        List<FinancialRecord> records;
+
+        if (role.equals("VIEWER")) {
+            // Only own records
+            records = recordRepository.findByUserId(user.getId());
+        } else {
+            // ANALYST / ADMIN → all records
+            records = recordRepository.findAll();
+        }
+
+        return records.stream()
+                .map(this::convertToDTO)
+                .toList();
     }
+
+    public FinancialRecordResponseDTO getRecordById(Long recordId, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        FinancialRecord record = recordRepository.findById(recordId)
+                .orElseThrow(() -> new RuntimeException("Record not found"));
+
+        String role = user.getRole().getName();
+
+        //  VIEWER restriction
+        if (role.equals("VIEWER") && !record.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+
+        return convertToDTO(record);
+    }
+
+    public void deleteAllRecords(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Only ADMIN allowed
+        if (!user.getRole().getName().equals("ADMIN")) {
+            throw new RuntimeException("Only ADMIN can delete all records");
+        }
+
+        recordRepository.deleteAll();
+    }
+
+    public void deleteRecordById(Long recordId, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Only ADMIN allowed
+        if (!user.getRole().getName().equals("ADMIN")) {
+            throw new RuntimeException("Only ADMIN can delete records");
+        }
+
+        FinancialRecord record = recordRepository.findById(recordId)
+                .orElseThrow(() -> new RuntimeException("Record not found"));
+
+        recordRepository.delete(record);
+    }
+    public List<FinancialRecordResponseDTO> getFilteredRecords(
+            String email,
+            String type,
+            String category,
+            String startDate,
+            String endDate) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String role = user.getRole().getName();
+
+        List<FinancialRecord> records;
+
+        //  ROLE-BASED FETCH (MAIN FIX)
+        if (role.equals("VIEWER")) {
+            records = recordRepository.findByUserId(user.getId()); // ✅ ONLY OWN
+        } else {
+            records = recordRepository.findAll(); // ANALYST & ADMIN
+        }
+
+        // Apply filters (same as before)
+
+        if (type != null) {
+            records = records.stream()
+                    .filter(r -> r.getType().equalsIgnoreCase(type))
+                    .toList();
+        }
+
+        if (category != null) {
+            records = records.stream()
+                    .filter(r -> r.getCategory().equalsIgnoreCase(category))
+                    .toList();
+        }
+
+        if (startDate != null && endDate != null) {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+
+            records = records.stream()
+                    .filter(r -> !r.getRecordDate().isBefore(start) &&
+                            !r.getRecordDate().isAfter(end))
+                    .toList();
+        }
+
+        return records.stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    public List<FinancialRecordResponseDTO> getRecordsByUserId(Long userId, String email) {
+
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
+
+        String role = currentUser.getRole().getName();
+
+        // VIEWER → only own data
+        if (role.equals("VIEWER") && !currentUser.getId().equals(userId)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        List<FinancialRecord> records = recordRepository.findByUserId(userId);
+
+        return records.stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    public FinancialRecordResponseDTO updateRecord(Long id,
+                                                   FinancialRecordRequestDTO dto,
+                                                   String email) {
+
+        User user = userRepository.findByEmail(email).orElseThrow();
+
+        if (!user.getRole().getName().equals("ADMIN")) {
+            throw new RuntimeException("Only ADMIN can update records");
+        }
+
+        FinancialRecord record = recordRepository.findById(id).orElseThrow();
+
+        record.setAmount(dto.getAmount());
+        record.setType(dto.getType());
+        record.setCategory(dto.getCategory());
+        record.setRecordDate(dto.getRecordDate());
+        record.setNotes(dto.getNotes());
+
+        return convertToDTO(recordRepository.save(record));
+    }
+
+
 
     //  HELPER METHOD (Entity → DTO conversion)
     private FinancialRecordResponseDTO convertToDTO(FinancialRecord record) {
@@ -78,3 +228,4 @@ public class FinancialRecordService {
         return dto;
     }
 }
+
