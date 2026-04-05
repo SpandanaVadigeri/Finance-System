@@ -10,7 +10,6 @@ import com.financeProject.MyProject.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -187,9 +186,9 @@ public class DashboardService {
         Map<String, Double> trends = new HashMap<>();
 
         for (FinancialRecord r : records) {
-            YearMonth month = YearMonth.from(r.getRecordDate());
+            String month = r.getRecordDate().getMonth().toString();
 
-            trends.put(String.valueOf(month),
+            trends.put(month,
                     trends.getOrDefault(month, 0.0) + r.getAmount());
         }
 
