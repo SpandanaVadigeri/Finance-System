@@ -104,4 +104,14 @@ public class FinancialRecordController {
 
         return recordService.updateRecord(id, dto, principal.getName());
     }
+
+    @GetMapping("/paginated")
+    public List<FinancialRecordResponseDTO> getPaginatedRecords(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            Principal principal) {
+
+        return recordService.getRecordsPaginated(
+                principal.getName(), page, size);
+    }
 }

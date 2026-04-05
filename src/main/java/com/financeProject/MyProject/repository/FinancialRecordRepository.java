@@ -1,6 +1,8 @@
 package com.financeProject.MyProject.repository;
 
 import com.financeProject.MyProject.model.FinancialRecord;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -15,4 +17,12 @@ public interface FinancialRecordRepository extends JpaRepository<FinancialRecord
 
     // Filter by category
     List<FinancialRecord> findByCategory(String category);
+
+    List<FinancialRecord> findByDeletedFalse();
+
+    List<FinancialRecord> findByUserIdAndDeletedFalse(Long userId);
+
+    Page<FinancialRecord> findByDeletedFalse(Pageable pageable);
+
+    Page<FinancialRecord> findByUserIdAndDeletedFalse(Long userId, Pageable pageable);
 }

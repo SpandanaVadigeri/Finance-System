@@ -7,6 +7,9 @@ import com.financeProject.MyProject.model.User;
 import com.financeProject.MyProject.repository.FinancialRecordRepository;
 import com.financeProject.MyProject.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -69,10 +72,12 @@ public class FinancialRecordService {
 
         if (role.equals("VIEWER")) {
             // Only own records
-            records = recordRepository.findByUserId(user.getId());
+//            records = recordRepository.findByUserId(user.getId());
+              records = recordRepository.findByUserIdAndDeletedFalse(user.getId());
         } else {
             // ANALYST / ADMIN → all records
-            records = recordRepository.findAll();
+//            records = recordRepository.findAll();
+              records = recordRepository.findByDeletedFalse();
         }
 
         return records.stream()
@@ -108,7 +113,15 @@ public class FinancialRecordService {
             throw new RuntimeException("Only ADMIN can delete all records");
         }
 
-        recordRepository.deleteAll();
+//        recordRepository.deleteAll();
+
+        List<FinancialRecord> records = recordRepository.findByDeletedFalse();
+
+        for (FinancialRecord r : records) {
+            r.setDeleted(true);
+        }
+
+        recordRepository.saveAll(records);
     }
 
     public void deleteRecordById(Long recordId, String email) {
@@ -124,7 +137,10 @@ public class FinancialRecordService {
         FinancialRecord record = recordRepository.findById(recordId)
                 .orElseThrow(() -> new RuntimeException("Record not found"));
 
-        recordRepository.delete(record);
+//        recordRepository.delete(record);
+
+        record.setDeleted(true);
+        recordRepository.save(record);
     }
     public List<FinancialRecordResponseDTO> getFilteredRecords(
             String email,
@@ -142,9 +158,10 @@ public class FinancialRecordService {
 
         //  ROLE-BASED FETCH (MAIN FIX)
         if (role.equals("VIEWER")) {
-            records = recordRepository.findByUserId(user.getId()); // ✅ ONLY OWN
+//            records = recordRepository.findByUserId(user.getId()); // Only own
+            records = recordRepository.findByUserIdAndDeletedFalse(user.getId());
         } else {
-            records = recordRepository.findAll(); // ANALYST & ADMIN
+            records = recordRepository.findByDeletedFalse(); // ANALYST & ADMIN
         }
 
         // Apply filters (same as before)
@@ -187,7 +204,7 @@ public class FinancialRecordService {
             throw new RuntimeException("Access denied");
         }
 
-        List<FinancialRecord> records = recordRepository.findByUserId(userId);
+        List<FinancialRecord> records = recordRepository.findByUserIdAndDeletedFalse(userId);
 
         return records.stream()
                 .map(this::convertToDTO)
@@ -213,6 +230,31 @@ public class FinancialRecordService {
         record.setNotes(dto.getNotes());
 
         return convertToDTO(recordRepository.save(record));
+    }
+
+    public List<FinancialRecordResponseDTO> getRecordsPaginated(
+            String email, int page, int size) {
+
+        User user = userRepository.findByEmail(email).orElseThrow();
+
+        String role = user.getRole().getName();
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<FinancialRecord> recordsPage;
+
+        if (role.equals("VIEWER")) {
+            recordsPage = recordRepository
+                    .findByUserIdAndDeletedFalse(user.getId(), pageable);
+        } else {
+            recordsPage = recordRepository
+                    .findByDeletedFalse(pageable);
+        }
+
+        return recordsPage.getContent()
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
     }
 
 

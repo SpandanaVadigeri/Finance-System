@@ -39,7 +39,16 @@ public class FinancialRecord {
     private LocalDateTime createdAt;
 
     @PrePersist
-    public void onCreate() {
-        this.createdAt = LocalDateTime.now();
+    public void prePersist() {
+        this.deleted = false;
+
+        if (this.recordDate == null) {
+            this.recordDate = LocalDate.now();
+        }
     }
+
+    @Column(nullable = false)
+    private Boolean deleted = false; // used for soft delete
+
+
 }

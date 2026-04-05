@@ -19,5 +19,4 @@ public class FinancialRecordResponseDTO {
 
     // Optional: include user info (simple form)
     private Long userId;
-
 }
