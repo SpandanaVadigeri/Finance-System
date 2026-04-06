@@ -65,21 +65,7 @@ public class DashboardService {
      */
     public DashboardSummaryDTO getSummary(String email) {
 
-        // Get current user from database
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String role = currentUser.getRole().getName();
-        List<FinancialRecord> records;
-
-        // Role-based data fetching
-        if (role.equals("VIEWER")) {
-            // VIEWER sees ONLY their own records
-            records = recordRepository.findByUserIdAndDeletedFalse(currentUser.getId());
-        } else {
-            // ANALYST & ADMIN see ALL records
-            records = recordRepository.findByDeletedFalse();
-        }
+        List<FinancialRecord> records = getRecordsByRole(email);
 
         double totalIncome = 0;
         double totalExpense = 0;
@@ -123,20 +109,7 @@ public class DashboardService {
 
     public List<CategorySummaryDTO> getCategorySummary(String email) {
 
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String role = currentUser.getRole().getName();
-        List<FinancialRecord> records;
-
-        // Role-based data fetching
-        if (role.equals("VIEWER")) {
-            // VIEWER sees ONLY their own records
-            records = recordRepository.findByUserIdAndDeletedFalse(currentUser.getId());
-        } else {
-            // ANALYST & ADMIN see ALL records
-            records = recordRepository.findByDeletedFalse();
-        }
+        List<FinancialRecord> records = getRecordsByRole(email);
 
         // Map to store category → total
         Map<String, Double> categoryMap = new HashMap<>();
@@ -301,17 +274,8 @@ public class DashboardService {
 
     public Object getTrends(String email) {
 
-        User user = userRepository.findByEmail(email).orElseThrow();
 
-        String role = user.getRole().getName();
-
-        List<FinancialRecord> records;
-
-        if (role.equals("VIEWER")) {
-            records = recordRepository.findByUserId(user.getId());
-        } else {
-            records = recordRepository.findAll();
-        }
+        List<FinancialRecord> records = getRecordsByRole(email);
 
         // Group by month
         Map<String, Double> trends = new HashMap<>();
@@ -342,17 +306,8 @@ public class DashboardService {
 
     public Object getCategoryAnalysis(String email) {
 
-        User user = userRepository.findByEmail(email).orElseThrow();
 
-        String role = user.getRole().getName();
-
-        List<FinancialRecord> records;
-
-        if (role.equals("VIEWER")) {
-            records = recordRepository.findByUserId(user.getId());
-        } else {
-            records = recordRepository.findAll();
-        }
+        List<FinancialRecord> records = getRecordsByRole(email);
 
         Map<String, Double> categoryMap = new HashMap<>();
 
@@ -388,17 +343,8 @@ public class DashboardService {
 
     public Object getRecentActivity(String email) {
 
-        User user = userRepository.findByEmail(email).orElseThrow();
 
-        String role = user.getRole().getName();
-
-        List<FinancialRecord> records;
-
-        if (role.equals("VIEWER")) {
-            records = recordRepository.findByUserId(user.getId());
-        } else {
-            records = recordRepository.findAll();
-        }
+        List<FinancialRecord> records = getRecordsByRole(email);
 
         // Sort by date (latest first)
         records.sort((a, b) -> b.getRecordDate().compareTo(a.getRecordDate()));
@@ -409,6 +355,32 @@ public class DashboardService {
                 .map(this::convertToDTO)
                 .toList();
     }
+
+    /*
+      Gets the appropriate list of financial records based on user role.
+
+      This is a centralized method to avoid重复 role checking logic across all dashboard methods.
+
+      @param email - Email of the authenticated user
+      @return List of FinancialRecord (filtered by role)
+      @throws RuntimeException if user not found
+     */
+    private List<FinancialRecord> getRecordsByRole(String email) {
+
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String role = currentUser.getRole().getName();
+
+        if (role.equals("VIEWER")) {
+            // VIEWER sees ONLY their own records
+            return recordRepository.findByUserIdAndDeletedFalse(currentUser.getId());
+        } else {
+            // ANALYST & ADMIN see ALL records (soft delete filter applied)
+            return recordRepository.findByDeletedFalse();
+        }
+    }
+
 
     /*
       Helper method to convert FinancialRecord entity to Response DTO.

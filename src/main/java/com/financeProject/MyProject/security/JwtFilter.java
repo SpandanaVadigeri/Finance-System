@@ -1,5 +1,7 @@
 package com.financeProject.MyProject.security;
 
+import com.financeProject.MyProject.model.User;
+import com.financeProject.MyProject.repository.UserRepository;
 import com.financeProject.MyProject.service.AuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -87,6 +89,9 @@ public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -104,13 +109,13 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 🔹 Extract token
+        //  Extract token
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
             username = jwtUtil.extractEmail(token); // ✅ use email
         }
 
-        // 🔹 Validate and authenticate
+        //  Validate and authenticate
         if (token != null && authService.isBlacklisted(token)) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.getWriter().write("Token is logged out");
@@ -118,6 +123,15 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+
+            //  CHECK USER STATUS AGAIN (Defense in depth)
+            User user = userRepository.findByEmail(username).orElse(null);
+            if (user == null || !user.getStatus().equals("ACTIVE")) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Account is inactive");
+                return;
+            }
 
             var userDetails = userDetailsService.loadUserByUsername(username);
             //compare with username/email, NOT userDetails
