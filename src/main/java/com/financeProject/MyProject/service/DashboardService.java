@@ -63,9 +63,23 @@ public class DashboardService {
 
       @return DashboardSummaryDTO containing totalIncome, totalExpense, and netBalance
      */
-    public DashboardSummaryDTO getSummary() {
+    public DashboardSummaryDTO getSummary(String email) {
 
-        List<FinancialRecord> records = recordRepository.findAll();
+        // Get current user from database
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String role = currentUser.getRole().getName();
+        List<FinancialRecord> records;
+
+        // Role-based data fetching
+        if (role.equals("VIEWER")) {
+            // VIEWER sees ONLY their own records
+            records = recordRepository.findByUserIdAndDeletedFalse(currentUser.getId());
+        } else {
+            // ANALYST & ADMIN see ALL records
+            records = recordRepository.findByDeletedFalse();
+        }
 
         double totalIncome = 0;
         double totalExpense = 0;
@@ -107,9 +121,22 @@ public class DashboardService {
      */
 
 
-    public List<CategorySummaryDTO> getCategorySummary() {
+    public List<CategorySummaryDTO> getCategorySummary(String email) {
 
-        List<FinancialRecord> records = recordRepository.findAll();
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String role = currentUser.getRole().getName();
+        List<FinancialRecord> records;
+
+        // Role-based data fetching
+        if (role.equals("VIEWER")) {
+            // VIEWER sees ONLY their own records
+            records = recordRepository.findByUserIdAndDeletedFalse(currentUser.getId());
+        } else {
+            // ANALYST & ADMIN see ALL records
+            records = recordRepository.findByDeletedFalse();
+        }
 
         // Map to store category → total
         Map<String, Double> categoryMap = new HashMap<>();

@@ -91,8 +91,9 @@ public class DashboardController {
       @see DashboardService#getSummary()
      */
     @GetMapping("/summary")
-    public ResponseEntity<?> getSummary() {
-        DashboardSummaryDTO summary = dashboardService.getSummary();
+    public ResponseEntity<?> getSummary(Principal principal) {
+        String email = principal.getName();
+        DashboardSummaryDTO summary = dashboardService.getSummary(email);
 
         return (summary.getTotalIncome() == 0 && summary.getTotalExpense() == 0)
                 ? ResponseEntity.status(HttpStatus.OK).body("No financial data available. Add some transactions first.")
@@ -121,8 +122,10 @@ public class DashboardController {
      @see DashboardService#getCategorySummary()
      */
     @GetMapping("/category")
-    public ResponseEntity<?> getCategorySummary() {
-        List<CategorySummaryDTO> categorySummary = dashboardService.getCategorySummary();
+    public ResponseEntity<?> getCategorySummary(Principal principal) {
+
+        String email = principal.getName();
+        List<CategorySummaryDTO> categorySummary = dashboardService.getCategorySummary(email);
 
         return (categorySummary.isEmpty())
                 ? ResponseEntity.status(HttpStatus.OK).body("No category data available. Add some transactions first.")
