@@ -129,6 +129,36 @@ mvn spring-boot:run
 ### Or run the JAR
 java -jar target/MyProject-0.0.1-SNAPSHOT.jar
 
+## API Endpoints List 
+1. POST /auth/login : User login with email and password
+2. POST /auth/logout : Logout & blacklist JWT token
+
+   ### ADMIN ONLY 
+4. GET  /admin/users/all : Get all users
+5. POST /admin/users/add : Create new user (viewer / analyst ) 
+6. GET /admin/users{id}  : Get user by ID
+7. PATCH	/admin/users/{id}/status?status=ACTIVE/INACTIVE	: Update user status
+8. PATCH	/admin/users/{id}/role?role=VIEWER/ANALYST/ADMIN :	Update user role
+
+   ### ADMIN + ANALYST
+9.  GET	/records/all : Get all records (role-based)
+10. GET	/records/{id}:	Get record by ID
+11. POST	/records/add?userId={id} :	Create transaction
+12. PUT	/records/{id} : Update transaction
+13. DELETE	/records/{id} : Delete transaction
+14. DELETE	/records/add :	Delete all transactions
+15. GET	/records/filter?type=&category=&startDate=&endDate=	: Filter transactions
+16. GET	/records/user/{userId} : Get records by user ID
+17. GET  /records/paginated?page=0&size=10 : Paginated records
+
+   ### ADMIN + ANALYST + VIEWER
+18. GET	/dashboard : Role-based dashboard data
+19. GET	/dashboard/summary : Personal income/expense summary
+20. GET	/dashboard/category : Category-wise breakdown
+21. GET	/dashboard/company-summary	: Company-wide summary
+22. GET	/dashboard/trends	: Monthly trends
+23. GET	/dashboard/category-analysis	: Category analysis
+24. GET	/dashboard/recent-activity	Recent 5 transactions
 
 ## Personal details
  
