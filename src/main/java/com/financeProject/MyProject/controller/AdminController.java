@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 /*
@@ -136,6 +137,38 @@ public class AdminController {
         String adminEmail = principal.getName();
         UserResponseDTO updatedUser = adminService.updateUserRole(id, role, adminEmail);
         return ResponseEntity.ok(updatedUser);
+    }
+
+    /*
+      Permanently deletes a user from the system.
+      Endpoint: DELETE /admin/users/{id}
+
+      Access: ADMIN only
+
+      Important Notes:
+      - Cannot delete your own account (self-deletion not allowed)
+      - Cannot delete other ADMIN accounts
+      - This is HARD DELETE (permanently removes user and all their records)
+      - Consider using soft delete instead for production
+
+      @param id - ID of the user to delete
+      @param principal Current logged-in ADMIN
+      @return Success message
+
+      @throws RuntimeException if:
+              - User not found
+              - Trying to delete self
+              - Trying to delete another ADMIN
+              - Current user is not ADMIN
+     */
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, Principal principal) {
+
+        String adminEmail = principal.getName();
+
+        adminService.deleteUser(id, adminEmail);
+
+        return ResponseEntity.ok("User deleted successfully");
     }
 
 }

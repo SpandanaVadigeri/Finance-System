@@ -2,8 +2,10 @@ package com.financeProject.MyProject.service;
 
 import com.financeProject.MyProject.dto.UserRequestDTO;
 import com.financeProject.MyProject.dto.UserResponseDTO;
+import com.financeProject.MyProject.model.FinancialRecord;
 import com.financeProject.MyProject.model.Role;
 import com.financeProject.MyProject.model.User;
+import com.financeProject.MyProject.repository.FinancialRecordRepository;
 import com.financeProject.MyProject.repository.RoleRepository;
 import com.financeProject.MyProject.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,9 @@ public class AdminService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private FinancialRecordRepository recordRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -256,6 +261,51 @@ public class AdminService {
         User updated = userRepository.save(user);
 
         return convertToDTO(updated);
+    }
+
+    /*
+      Permanently deletes a user from the system.
+
+      Security Rules:
+      - Only ADMIN can delete users
+      - Cannot delete own account
+      - Cannot delete other ADMIN accounts
+
+      @param userId ID of the user to delete
+      @param adminEmail Email of the ADMIN performing deletion
+      @throws RuntimeException if validation fails
+     */
+    @Transactional
+    public void deleteUser(Long userId, String adminEmail) {
+
+        // Step 1: Verify the requesting user is ADMIN
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        if (!admin.getRole().getName().equals("ADMIN")) {
+            throw new RuntimeException("Only ADMIN can delete users");
+        }
+
+        // Step 2: Find the target user
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        // Step 3: Prevent self-deletion
+        if (targetUser.getEmail().equals(adminEmail)) {
+            throw new RuntimeException("Cannot delete your own account");
+        }
+
+        // Step 4: Prevent deleting other ADMIN accounts
+        if (targetUser.getRole().getName().equals("ADMIN")) {
+            throw new RuntimeException("Cannot delete ADMIN users");
+        }
+
+        // Step 5: Delete all financial records of this user first
+        List<FinancialRecord> userRecords = recordRepository.findByUserId(userId);
+        recordRepository.deleteAll(userRecords);
+
+        // Step 6: Delete the user
+        userRepository.delete(targetUser);
     }
 
     /*
