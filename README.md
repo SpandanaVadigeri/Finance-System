@@ -42,6 +42,8 @@ A comprehensive **Role-Based Financial Management System** that enables organiza
 | **Update user roles** | ❌ | ❌ | ✅ |
 | **Activate/Deactivate users** | ❌ | ❌ | ✅ |
 
+## Architecture Diagram
+https://drive.google.com/file/d/1qKw6X7INYhj95NfGRDGKkvmtubgZ0e1P/view
 
 ##  Technology Stack
 
