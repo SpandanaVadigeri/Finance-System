@@ -71,8 +71,7 @@ A comprehensive **Role-Based Financial Management System** that enables organiza
 
 ### Step-by-Step Setup
 ## 1. Clone Repository
-   - git clone https://github.com/yourusername/finance-project.git
-   - cd finance-project
+   - git clone https://github.com/SpandanaVadigeri/Finance-System.git
 ## 2. Configure Database
 
    Create MySQL database:
@@ -111,6 +110,7 @@ logging.level.org.springframework.security=DEBUG
 Run this SQL script to create initial roles:
 
 sql
+
 INSERT INTO roles (name) VALUES ('VIEWER');
 
 INSERT INTO roles (name) VALUES ('ANALYST');
@@ -135,7 +135,7 @@ Spandana V
 
 Email: spandanavadigeri@gmail.com
 
-LinkedIn: linkedin.com/in/yourprofile
+LinkedIn: www.linkedin.com/in/spandana-vadigeri
 
-GitHub: github.com/yourusername
+GitHub: github.com/SpandanaVadigeri
 
